@@ -1,4 +1,4 @@
-export type Rating = "1-star" | "2-star" | "3-star" | "bib-gourmand";
+export type Rating = "1-star" | "2-star" | "3-star" | "bib-gourmand" | "selected";
 
 export interface Restaurant {
   id: number;

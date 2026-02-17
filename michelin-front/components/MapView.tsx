@@ -10,6 +10,7 @@ const RATING_COLORS: Record<string, string> = {
   "2-star": "#C8102E",
   "1-star": "#C8102E",
   "bib-gourmand": "#B45309",
+  selected: "#78716C",
 };
 
 const RATING_SCALES: Record<string, number> = {
@@ -17,6 +18,7 @@ const RATING_SCALES: Record<string, number> = {
   "2-star": 8,
   "1-star": 7,
   "bib-gourmand": 6,
+  selected: 5,
 };
 
 function createMarkerIcon(rating: string, isActive: boolean): google.maps.Symbol {
@@ -206,10 +208,7 @@ export default function MapView() {
     <div className="relative w-full h-full">
       <div ref={mapContainerRef} className="w-full h-full" />
       {!sdkReady && (
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ backgroundColor: "#ECE7E1" }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: "#ECE7E1" }}>
           <div className="text-center">
             <div className="w-5 h-5 border-2 border-stone-400 border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="text-[10px] text-stone-400 mt-3 tracking-widest uppercase">Map</p>

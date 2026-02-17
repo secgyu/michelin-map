@@ -35,11 +35,23 @@ function BibGourmandIcon({ className }: { className?: string }) {
   );
 }
 
+function SelectedIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
+      <text x="12" y="16" textAnchor="middle" fontSize="10" fontWeight="bold" fontFamily="serif">
+        M
+      </text>
+    </svg>
+  );
+}
+
 const ratingLabels: Record<Rating, string> = {
   "3-star": "미쉐린 3스타",
   "2-star": "미쉐린 2스타",
   "1-star": "미쉐린 1스타",
   "bib-gourmand": "빕 구르망",
+  selected: "미쉐린 셀렉티드",
 };
 
 const sizeClasses = {
@@ -52,19 +64,31 @@ export default function StarRating({ rating, size = "sm", showLabel = false }: S
   const sizeClass = sizeClasses[size];
   const label = ratingLabels[rating];
 
-  const content =
-    rating === "bib-gourmand" ? (
+  let content: React.ReactNode;
+
+  if (rating === "bib-gourmand") {
+    content = (
       <span className="inline-flex items-center gap-1">
         <BibGourmandIcon className={`${sizeClass} text-amber-700`} />
         {showLabel && <span className="text-[11px] font-medium text-amber-700 tracking-tight">Bib Gourmand</span>}
       </span>
-    ) : (
+    );
+  } else if (rating === "selected") {
+    content = (
+      <span className="inline-flex items-center gap-1">
+        <SelectedIcon className={`${sizeClass} text-stone-500`} />
+        {showLabel && <span className="text-[11px] font-medium text-stone-500 tracking-tight">Selected</span>}
+      </span>
+    );
+  } else {
+    content = (
       <span className="inline-flex items-center gap-[1px]">
         {Array.from({ length: parseInt(rating) }).map((_, i) => (
           <MichelinStar key={i} className={`${sizeClass} text-michelin-red`} />
         ))}
       </span>
     );
+  }
 
   return (
     <Tooltip>

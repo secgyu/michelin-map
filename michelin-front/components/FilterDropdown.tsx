@@ -10,6 +10,7 @@ const ratingOptions: { value: Rating; label: string; sub: string }[] = [
   { value: "2-star", label: "★★", sub: "Two Stars" },
   { value: "1-star", label: "★", sub: "One Star" },
   { value: "bib-gourmand", label: "BG", sub: "Bib Gourmand" },
+  { value: "selected", label: "M", sub: "Selected" },
 ];
 
 function FilterButton({
