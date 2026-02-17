@@ -12,14 +12,19 @@ import (
 func parseDetailPage(e *colly.XMLElement) model.Restaurant {
 	r := model.Restaurant{}
 
-	// Name
+	// Name (한국어 페이지에서는 한국어 이름, 원어 이름이 올 수 있음)
 	r.Name = firstNonEmpty(e,
 		"//*[@class='data-sheet__title']",
 		"//*[contains(@class,'restaurant-details__heading--title')]",
 		"//h1",
 	)
 	r.Name = trimWhitespace(r.Name)
-	r.NameEn = r.Name
+
+	// English name: URL slug에서 추출 (e.g., /restaurant/mingles → Mingles)
+	r.NameEn = nameFromURLSlug(e.Request.URL.String())
+	if r.NameEn == "" {
+		r.NameEn = r.Name
+	}
 
 	// Address
 	r.Address = firstNonEmpty(e,
@@ -81,13 +86,41 @@ func parseDetailPage(e *colly.XMLElement) model.Restaurant {
 	// Distinction / Rating from detail page
 	r.Rating = extractRatingFromPage(e)
 
-	// Region (extracted from location context or address)
+	// Region (한국어 지역명으로 추출)
 	r.Region = parseRegionFromAddress(r.Address)
 
 	return r
 }
 
+// nameFromURLSlug extracts the English restaurant name from the URL slug.
+// e.g., "https://.../restaurant/la-yeon" → "La Yeon"
+func nameFromURLSlug(pageURL string) string {
+	idx := strings.LastIndex(pageURL, "/restaurant/")
+	if idx == -1 {
+		return ""
+	}
+	slug := pageURL[idx+len("/restaurant/"):]
+	slug = strings.TrimSuffix(slug, "/")
+
+	// Remove query params or fragments
+	if i := strings.IndexAny(slug, "?#"); i >= 0 {
+		slug = slug[:i]
+	}
+	if slug == "" {
+		return ""
+	}
+
+	words := strings.Split(slug, "-")
+	for i, w := range words {
+		if len(w) > 0 {
+			words[i] = strings.ToUpper(string(w[0])) + w[1:]
+		}
+	}
+	return strings.Join(words, " ")
+}
+
 // extractRatingFromPage tries to determine the Michelin distinction from the detail page HTML.
+// Handles both English and Korean distinction text.
 func extractRatingFromPage(e *colly.XMLElement) model.Rating {
 	distinction := firstNonEmpty(e,
 		"//div[@class='data-sheet__classification-item--content'][2]",
@@ -97,14 +130,16 @@ func extractRatingFromPage(e *colly.XMLElement) model.Rating {
 	distinction = strings.ToLower(trimWhitespace(distinction))
 
 	switch {
-	case strings.Contains(distinction, "3") && strings.Contains(distinction, "star"):
+	case strings.Contains(distinction, "3") && (strings.Contains(distinction, "star") || strings.Contains(distinction, "스타")):
 		return model.RatingThreeStar
-	case strings.Contains(distinction, "2") && strings.Contains(distinction, "star"):
+	case strings.Contains(distinction, "2") && (strings.Contains(distinction, "star") || strings.Contains(distinction, "스타")):
 		return model.RatingTwoStar
-	case strings.Contains(distinction, "1") && strings.Contains(distinction, "star"):
+	case strings.Contains(distinction, "1") && (strings.Contains(distinction, "star") || strings.Contains(distinction, "스타")):
 		return model.RatingOneStar
-	case strings.Contains(distinction, "bib"):
+	case strings.Contains(distinction, "bib") || strings.Contains(distinction, "빕"):
 		return model.RatingBibGourmand
+	case strings.Contains(distinction, "selected") || strings.Contains(distinction, "셀렉") || strings.Contains(distinction, "추천"):
+		return model.RatingSelected
 	default:
 		return ""
 	}
@@ -120,7 +155,7 @@ func firstNonEmpty(e *colly.XMLElement, selectors ...string) string {
 	return ""
 }
 
-// parsePriceAndCuisine splits a combined string like "₩₩₩₩ · Korean" into price range and cuisine.
+// parsePriceAndCuisine splits a combined string like "₩₩₩₩ · 한식" into price range and cuisine.
 func parsePriceAndCuisine(s string) (int, string) {
 	if s == "" {
 		return 0, ""
@@ -215,29 +250,31 @@ func cleanPhoneNumber(s string) string {
 	return s
 }
 
-// parseRegionFromAddress extracts the region (city) from a Korean address.
+// parseRegionFromAddress extracts the region (city) from an address in Korean.
 func parseRegionFromAddress(address string) string {
 	if address == "" {
 		return ""
 	}
 
 	regionMap := map[string]string{
-		"Seoul":  "Seoul",
-		"서울":     "Seoul",
-		"Busan":  "Busan",
-		"부산":     "Busan",
-		"Incheon": "Incheon",
-		"인천":     "Incheon",
-		"Jeju":   "Jeju",
-		"제주":     "Jeju",
-		"Daegu":  "Daegu",
-		"대구":     "Daegu",
-		"Daejeon": "Daejeon",
-		"대전":     "Daejeon",
-		"Gwangju": "Gwangju",
-		"광주":     "Gwangju",
-		"Gyeonggi": "Gyeonggi",
-		"경기":      "Gyeonggi",
+		"Seoul":    "서울",
+		"서울":       "서울",
+		"Busan":    "부산",
+		"부산":       "부산",
+		"Incheon":  "인천",
+		"인천":       "인천",
+		"Jeju":     "제주",
+		"제주":       "제주",
+		"Daegu":    "대구",
+		"대구":       "대구",
+		"Daejeon":  "대전",
+		"대전":       "대전",
+		"Gwangju":  "광주",
+		"광주":       "광주",
+		"Gyeonggi": "경기",
+		"경기":       "경기",
+		"Gangwon":  "강원",
+		"강원":       "강원",
 	}
 
 	for keyword, region := range regionMap {

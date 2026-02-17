@@ -8,6 +8,7 @@ const (
 	RatingTwoStar     Rating = "2-star"
 	RatingOneStar     Rating = "1-star"
 	RatingBibGourmand Rating = "bib-gourmand"
+	RatingSelected    Rating = "selected"
 )
 
 // Restaurant represents a Michelin Guide restaurant.

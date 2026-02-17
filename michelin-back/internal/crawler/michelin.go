@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -65,10 +66,12 @@ func New() *Crawler {
 // Run executes the full crawl pipeline and saves results to outputPath.
 func (cr *Crawler) Run(outputPath string) error {
 	urls := []startURL{
-		{model.RatingThreeStar, "https://guide.michelin.com/kr/en/selection/south-korea/restaurants/3-stars-michelin"},
-		{model.RatingTwoStar, "https://guide.michelin.com/kr/en/selection/south-korea/restaurants/2-stars-michelin"},
-		{model.RatingOneStar, "https://guide.michelin.com/kr/en/selection/south-korea/restaurants/1-star-michelin"},
-		{model.RatingBibGourmand, "https://guide.michelin.com/kr/en/selection/south-korea/restaurants/bib-gourmand"},
+		{model.RatingThreeStar, "https://guide.michelin.com/kr/ko/selection/south-korea/restaurants/3-stars-michelin"},
+		{model.RatingTwoStar, "https://guide.michelin.com/kr/ko/selection/south-korea/restaurants/2-stars-michelin"},
+		{model.RatingOneStar, "https://guide.michelin.com/kr/ko/selection/south-korea/restaurants/1-star-michelin"},
+		{model.RatingBibGourmand, "https://guide.michelin.com/kr/ko/selection/south-korea/restaurants/bib-gourmand"},
+		// 전체 한국 레스토랑 목록 (selected 등 나머지 등급 수집용, 이미 수집된 것은 중복 제거)
+		{model.RatingSelected, "https://guide.michelin.com/kr/ko/selection/south-korea/restaurants"},
 	}
 
 	cr.setupListingHandlers()
@@ -104,14 +107,21 @@ func (cr *Crawler) setupListingHandlers() {
 		log.Printf("[list] error %d on %s: %v", r.StatusCode, r.Request.URL, err)
 	})
 
-	// Extract the total expected restaurant count from the page header (e.g., "1-48 of 113 restaurants")
-	// to avoid collecting "Discover the newly added" cards at the bottom.
+	// Extract the total expected restaurant count from the page header.
+	// English: "1-48 of 113 restaurants", Korean: "113개의 레스토랑 중 1-48" etc.
 	cr.collector.OnXML("//h1", func(e *colly.XMLElement) {
 		text := e.Text
-		re := regexp.MustCompile(`of\s+(\d+)\s+restaurant`)
-		if matches := re.FindStringSubmatch(text); len(matches) == 2 {
-			total, _ := strconv.Atoi(matches[1])
-			e.Request.Ctx.Put("expectedTotal", strconv.Itoa(total))
+		patterns := []*regexp.Regexp{
+			regexp.MustCompile(`of\s+(\d+)\s+restaurant`),
+			regexp.MustCompile(`(\d+)\s*개의?\s*레스토랑`),
+			regexp.MustCompile(`(\d+)\s*restaurant`),
+		}
+		for _, re := range patterns {
+			if matches := re.FindStringSubmatch(text); len(matches) == 2 {
+				total, _ := strconv.Atoi(matches[1])
+				e.Request.Ctx.Put("expectedTotal", strconv.Itoa(total))
+				break
+			}
 		}
 	})
 
@@ -146,6 +156,11 @@ func (cr *Crawler) setupListingHandlers() {
 
 		detailURL := e.Request.AbsoluteURL(detailHref)
 
+		// Only follow detail links for South Korean restaurants
+		if !isKoreaDetailURL(detailURL) {
+			return
+		}
+
 		location := e.ChildText(".//div[contains(@class,'card__menu-footer--score')]")
 		if location == "" {
 			location = e.ChildText(".//div[contains(@class,'card__menu-footer')]//p")
@@ -160,20 +175,27 @@ func (cr *Crawler) setupListingHandlers() {
 		cr.detailCollector.Request(e.Request.Method, detailURL, nil, ctx, nil)
 	})
 
-	// Follow pagination "next page" links
+	// Follow pagination "next page" links (only within south-korea selection)
 	cr.collector.OnXML("//li[contains(@class,'arrow')]/a", func(e *colly.XMLElement) {
 		nextURL := e.Request.AbsoluteURL(e.Attr("href"))
+		if !strings.Contains(nextURL, "south-korea") {
+			log.Printf("[list] skipping non-Korea pagination: %s", nextURL)
+			return
+		}
 		log.Printf("[list] next page: %s", nextURL)
 		ctx := colly.NewContext()
 		ctx.Put("rating", e.Request.Ctx.Get("rating"))
 		cr.collector.Request(e.Request.Method, nextURL, nil, ctx, nil)
 	})
 
-	// Alternative pagination: numbered page links
+	// Alternative pagination: numbered page links (only within south-korea selection)
 	cr.collector.OnXML("//a[contains(@class,'btn-outline-secondary') and contains(@href,'page=')]", func(e *colly.XMLElement) {
 		href := e.Attr("href")
 		if href != "" {
 			nextURL := e.Request.AbsoluteURL(href)
+			if !strings.Contains(nextURL, "south-korea") {
+				return
+			}
 			ctx := colly.NewContext()
 			ctx.Put("rating", e.Request.Ctx.Get("rating"))
 			cr.collector.Request(e.Request.Method, nextURL, nil, ctx, nil)
@@ -208,7 +230,7 @@ func (cr *Crawler) setupDetailHandlers() {
 			restaurant.Region = loc
 		}
 
-		// Only include restaurants with a valid star/bib-gourmand rating
+		// Only include restaurants with a valid distinction
 		if restaurant.Rating == "" {
 			log.Printf("[detail] skipping (no valid distinction): %s at %s", restaurant.Name, restaurant.MichelinURL)
 			return
@@ -243,4 +265,32 @@ func (cr *Crawler) saveJSON(outputPath string) error {
 
 	log.Printf("[save] wrote %d restaurants to %s", len(cr.restaurants), outputPath)
 	return nil
+}
+
+// isKoreaDetailURL checks if a restaurant detail URL belongs to South Korea.
+func isKoreaDetailURL(u string) bool {
+	koreaRegions := []string{
+		"/seoul-capital-area/",
+		"/busan-region/",
+		"/jeju-region/",
+		"/gyeonggi-region/",
+		"/incheon-region/",
+		"/daegu-region/",
+		"/daejeon-region/",
+		"/gwangju-region/",
+		"/gangwon-region/",
+		"/kr-seoul/",
+		"/kr-busan/",
+		"/kr-jeju/",
+		"/kr-incheon/",
+		"/kr-daegu/",
+		"/kr-daejeon/",
+		"/kr-gwangju/",
+	}
+	for _, region := range koreaRegions {
+		if strings.Contains(u, region) {
+			return true
+		}
+	}
+	return false
 }
