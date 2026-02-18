@@ -24,7 +24,7 @@ export default function Home() {
       <div className="h-screen w-screen flex items-center justify-center bg-cream">
         <div className="text-center">
           <div className="w-6 h-6 border-2 border-michelin-red border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-[12px] text-stone-400 mt-4 tracking-widest uppercase font-medium">Loading</p>
+          <p className="text-[12px] text-stone-400 mt-4 tracking-widest uppercase font-medium">로딩 중</p>
         </div>
       </div>
     );

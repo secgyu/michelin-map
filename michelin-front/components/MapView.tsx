@@ -211,7 +211,7 @@ export default function MapView() {
         <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: "#ECE7E1" }}>
           <div className="text-center">
             <div className="w-5 h-5 border-2 border-stone-400 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-[10px] text-stone-400 mt-3 tracking-widest uppercase">Map</p>
+            <p className="text-[10px] text-stone-400 mt-3 tracking-widest uppercase">지도</p>
           </div>
         </div>
       )}

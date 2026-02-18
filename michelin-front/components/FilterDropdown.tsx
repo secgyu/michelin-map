@@ -62,7 +62,7 @@ export default function FilterDropdown() {
     <div className="mt-4">
       <button onClick={toggleFilter} className="flex items-center gap-2 group">
         <span className="text-[11px] uppercase tracking-[0.15em] text-warm-gray group-hover:text-charcoal transition-colors duration-300 font-medium">
-          Filters
+          필터
         </span>
         {activeCount > 0 && (
           <span className="w-4 h-4 flex items-center justify-center text-[9px] font-semibold text-white bg-michelin-red rounded-full">
@@ -94,7 +94,7 @@ export default function FilterDropdown() {
           >
             <div className="pt-5 space-y-4">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-2 font-medium">Distinction</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-2 font-medium">등급</p>
                 <div className="flex flex-wrap gap-1">
                   {ratingOptions.map((opt) => (
                     <FilterButton
@@ -111,10 +111,10 @@ export default function FilterDropdown() {
               <Separator className="bg-stone-200/60" />
 
               <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-2 font-medium">Region</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-2 font-medium">지역</p>
                 <div className="flex flex-wrap gap-1">
                   <FilterButton active={!selectedRegion} onClick={() => setRegion("")}>
-                    All
+                    전체
                   </FilterButton>
                   {regions.map((region) => (
                     <FilterButton
@@ -131,10 +131,10 @@ export default function FilterDropdown() {
               <Separator className="bg-stone-200/60" />
 
               <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-2 font-medium">Cuisine</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-2 font-medium">요리</p>
                 <div className="flex flex-wrap gap-1">
                   <FilterButton active={!selectedCuisine} onClick={() => setCuisine("")}>
-                    All
+                    전체
                   </FilterButton>
                   {cuisines.map((cuisine) => (
                     <FilterButton

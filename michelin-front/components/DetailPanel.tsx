@@ -54,7 +54,7 @@ export default function DetailPanel() {
                 <line x1="19" y1="12" x2="5" y2="12" />
                 <polyline points="12 19 5 12 12 5" />
               </svg>
-              Back
+              뒤로
             </button>
           </div>
 
@@ -126,7 +126,7 @@ export default function DetailPanel() {
                       <circle cx="12" cy="10" r="3" />
                     </svg>
                   }
-                  label="Address"
+                  label="주소"
                   value={selectedRestaurant.address}
                 />
                 <MetaItem
@@ -136,7 +136,7 @@ export default function DetailPanel() {
                       <path d="M12 6v6l4 2" />
                     </svg>
                   }
-                  label="Cuisine"
+                  label="요리"
                   value={selectedRestaurant.cuisine}
                 />
                 <MetaItem
@@ -146,7 +146,7 @@ export default function DetailPanel() {
                       <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                     </svg>
                   }
-                  label="Price"
+                  label="가격"
                   value={priceLabels[selectedRestaurant.price_range]}
                 />
               </div>
@@ -154,7 +154,7 @@ export default function DetailPanel() {
               <Separator className="bg-stone-200/60 my-6" />
 
               <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-stone-400 font-medium mb-3">About</p>
+                <p className="text-[10px] uppercase tracking-[0.15em] text-stone-400 font-medium mb-3">소개</p>
                 <p className="text-[14px] text-charcoal/75 leading-[1.9] tracking-[-0.005em] font-light">
                   {selectedRestaurant.description}
                 </p>
@@ -176,7 +176,7 @@ export default function DetailPanel() {
                         <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
                       </svg>
                     }
-                    label="Phone"
+                    label="전화"
                     value={selectedRestaurant.phone_number}
                   />
                 </>

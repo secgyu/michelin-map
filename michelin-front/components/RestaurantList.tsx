@@ -36,8 +36,8 @@ export default function RestaurantList() {
   return (
     <div className="flex-1 overflow-hidden flex flex-col" style={{ minHeight: 0 }}>
       <div className="px-6 pt-4 pb-2 flex items-baseline justify-between shrink-0">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-medium">{sorted.length} Restaurants</p>
-        <p className="text-[10px] text-stone-300 tracking-tight">by distinction</p>
+        <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-medium">{sorted.length}개 레스토랑</p>
+        <p className="text-[10px] text-stone-300 tracking-tight">등급순</p>
       </div>
 
       <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>

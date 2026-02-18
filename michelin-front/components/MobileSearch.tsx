@@ -43,7 +43,7 @@ export default function MobileSearch() {
           onChange={(e) => setSearch(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder="Search restaurants"
+          placeholder="레스토랑 검색"
           className="flex-1 bg-transparent text-[13px] text-charcoal outline-none placeholder:text-stone-300 font-light tracking-tight"
         />
         <AnimatePresence>
